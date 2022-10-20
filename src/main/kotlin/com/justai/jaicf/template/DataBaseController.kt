@@ -8,8 +8,9 @@ class DataBaseController {
     private lateinit var conn: Connection
     private val pstmt: PreparedStatement? = null
     var statement: Statement? = null
-    var id: Int = 0
-    var choiseAnswer: MutableList<String> = mutableListOf()
+    var id: Int = 1
+    var correctScore: Int = 0
+
 
     fun initializeDatabase() { // Инициализация и подключение бд
         val username = "KotlinTest"
@@ -28,32 +29,35 @@ class DataBaseController {
 
 
     @Throws(SQLException::class)
-    fun getQuestion(): String? { // Получение адреса
+    fun getQuestion(): String? { // Получение вопроса
         val query = "SELECT QUESTION FROM TEST WHERE ID =$id"
         var resultSet = statement!!.executeQuery(query)
         resultSet = statement!!.executeQuery(query)
-        resultSet.last()
-
+        resultSet.next()
         return resultSet.getString(1)
     }
 
+
     @JvmName("getChoiseAnswer1")
     @Throws(SQLException::class)
-    fun getChoiseAnswer(): MutableList<String> { // Получение адреса
+    fun getChoiseAnswer(): String { // Получение выбора ответа
+        var choiseAnswer: String = ""
         val query = "SELECT CHOISE FROM TEST WHERE ID =$id"
         var resultSet = statement!!.executeQuery(query)
         resultSet = statement!!.executeQuery(query)
-        while (resultSet.next()) choiseAnswer.add(resultSet.getString(1))
+        resultSet.next()
+        choiseAnswer = resultSet.getString(1)
         return choiseAnswer
     }
 
     @Throws(SQLException::class)
-    fun checkAns(answer: String): String? { // Получение адреса
+    fun checkAns(answer: String): String? { // Проверка правильного ответа
         val query = "SELECT TRUEANSWER FROM TEST WHERE ID =$id"
         var resultSet = statement!!.executeQuery(query)
         resultSet = statement!!.executeQuery(query)
         resultSet.next()
         return if (resultSet.getString(1).equals(answer)) {
+            correctScore++
             "Верно"
         } else
             "Неверно"

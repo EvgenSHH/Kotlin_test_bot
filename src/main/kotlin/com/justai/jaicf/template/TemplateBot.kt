@@ -8,12 +8,19 @@ import com.justai.jaicf.builder.Scenario
 import com.justai.jaicf.channel.telegram.telegram
 import java.util.*
 
-var correctScore: Int = 0
 
 val accessToken: String = System.getenv("JAICP_API_TOKEN") ?: Properties().run {
     load(CailaNLUSettings::class.java.getResourceAsStream("/jaicp.properties"))
     getProperty("apiToken")
 }
+
+data class Update(
+    val message: Message?
+)
+
+data class Message(
+    val text: String?
+)
 
 private val cailaNLUSettings = CailaNLUSettings(
     accessToken = accessToken
@@ -30,32 +37,47 @@ val HelloWorldScenario = Scenario {
 
         action {
             reactions.say("Начать тестирование?")
-            reactions.buttons("Да", "Нет")
+            reactions.buttons(" Да ", "Нет")
         }
     }
 
-    state("test") {
+    state("firstQ") {
         activators {
-            regex("Да")
+            regex(" Да ")
         }
         action {
+            dbs.id = 1
             reactions.say(dbs.getQuestion().toString())
             reactions.buttons(
-                dbs.getChoiseAnswer()[0].split(",")[0],
-                dbs.getChoiseAnswer()[1].split(",")[1],
-                dbs.getChoiseAnswer()[2].split(",")[2],
-                dbs.getChoiseAnswer()[3].split(",")[3]
-
+                dbs.getChoiseAnswer().split(", ")[0],
+                dbs.getChoiseAnswer().split(", ")[1],
+                dbs.getChoiseAnswer().split(", ")[2],
+                dbs.getChoiseAnswer().split(", ")[3]
             )
+
         }
     }
+
     state("testing") {
+
         activators {
             catchAll()
         }
         action {
-            reactions.say(dbs.checkAns(request.telegram?.message.toString()).toString())
+            val telegramRequest = request.telegram
+
+            if (telegramRequest != null) {
+                reactions.say(dbs.checkAns(telegramRequest.input.toString()).toString())
+            }
             dbs.id++
+            reactions.say(dbs.getQuestion().toString())
+            reactions.buttons(
+                dbs.getChoiseAnswer().split(", ")[0],
+                dbs.getChoiseAnswer().split(", ")[1],
+                dbs.getChoiseAnswer().split(", ")[2],
+                dbs.getChoiseAnswer().split(", ")[3]
+            )
+
         }
     }
 
@@ -71,9 +93,7 @@ val HelloWorldScenario = Scenario {
 
 
 val helloWorldBot = BotEngine(
-    scenario = HelloWorldScenario,
-    activators = arrayOf(
-        RegexActivator,
-        CatchAllActivator
+    scenario = HelloWorldScenario, activators = arrayOf(
+        RegexActivator, CatchAllActivator
     )
 )
