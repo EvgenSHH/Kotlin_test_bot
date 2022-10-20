@@ -37,7 +37,7 @@ val HelloWorldScenario = Scenario {
 
         action {
             reactions.say("Начать тестирование?")
-            reactions.buttons(" Да ", "Нет")
+            reactions.buttons(" Да ", " Нет ")
         }
     }
 
@@ -47,6 +47,7 @@ val HelloWorldScenario = Scenario {
         }
         action {
             dbs.id = 1
+            dbs.correctScore = 0
             reactions.say(dbs.getQuestion().toString())
             reactions.buttons(
                 dbs.getChoiseAnswer().split(", ")[0],
@@ -59,7 +60,6 @@ val HelloWorldScenario = Scenario {
     }
 
     state("testing") {
-
         activators {
             catchAll()
         }
@@ -69,6 +69,20 @@ val HelloWorldScenario = Scenario {
             if (telegramRequest != null) {
                 reactions.say(dbs.checkAns(telegramRequest.input.toString()).toString())
             }
+            if (dbs.id == 20) {
+                reactions.say("Количество верных ответ: " + dbs.correctScore)
+                if (dbs.correctScore < 5) {
+                    reactions.say("Ваш уровень: начинающий")
+                } else if (dbs.correctScore in 5..10) {
+                    reactions.say("Ваш уровень: средний ")
+                } else if (dbs.correctScore in 11..15) {
+                    reactions.say("Ваш уровень: выше среднего")
+                } else if (dbs.correctScore in 16..20) {
+                    reactions.say("Ваш уровень: наивысший")
+                }
+                reactions.say("Начать тестирование заново?")
+                reactions.buttons(" Да ", " Нет ")
+            }
             dbs.id++
             reactions.say(dbs.getQuestion().toString())
             reactions.buttons(
@@ -77,13 +91,12 @@ val HelloWorldScenario = Scenario {
                 dbs.getChoiseAnswer().split(", ")[2],
                 dbs.getChoiseAnswer().split(", ")[3]
             )
-
         }
     }
 
     state("bye") {
         activators {
-            regex("Нет")
+            regex(" Нет ")
         }
         action {
             reactions.say("До свидания!")
